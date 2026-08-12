@@ -242,6 +242,37 @@ This project was created to gain practical experience with:
 * Production-style Android project organization
 
 ---
+# 📦 Download APK
+
+<p align="center">
+  <a href="./app-release.apk">
+    <img src="https://img.shields.io/badge/Download%20APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Download APK"/>
+  </a>
+</p>
+
+<p align="center">
+  <strong>⬇️ Download and try the latest version of the WhatsApp Clone.</strong>
+</p>
+
+> 📌 **Installation:** Download the APK on your Android device and install it.
+> You may need to enable **Install unknown apps** in your Android settings.
+
+### 📱 APK Information
+
+| Information      | Details         |
+| ---------------- | --------------- |
+| 📦 Application   | WhatsApp Clone  |
+| 📱 Platform      | Android         |
+| 💻 Language      | Kotlin          |
+| 🎨 UI            | Jetpack Compose |
+| 🏗️ Architecture | MVVM            |
+| 🔥 Backend       | Firebase        |
+| 📥 Format        | APK             |
+
+### ⚠️ Note
+
+This APK is provided for **testing and educational purposes**.
+Only install APK files that you trust.
 
 # 🤝 Contributing
 
