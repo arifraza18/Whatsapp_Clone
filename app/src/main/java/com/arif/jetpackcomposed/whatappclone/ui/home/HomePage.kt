@@ -1,115 +1,105 @@
-package com.arif.jetpackcomposed.whatappclone
-
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.clickable
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import androidx.compose.runtime.LaunchedEffect
-
-
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.arif.jetpackcomposed.whatappclone.ui.chat.ChatScreen
+import com.arif.jetpackcomposed.whatappclone.viewmodel.home.HomeViewModel
+import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class ChatData(
+    val uid: String,
     val name: String,
     val message: String,
     val time: String,
     val unreadCount: Int
 )
+
 @Composable
-fun HomePage() {
-
+fun HomePage(
+    homeViewModel: HomeViewModel = viewModel()
+) {
     val whatsappGreen = Color(0xFF075E54)
+
     var searchText by remember { mutableStateOf("") }
-    var selectedChat by remember { mutableStateOf<String?>(null) }
-    var chats by remember {
-        mutableStateOf<List<ChatData>>(emptyList())
-    }
+    var selectedChat by remember { mutableStateOf<ChatData?>(null) }
+
     LaunchedEffect(Unit) {
+        homeViewModel.loadUsers()
 
-        val database = FirebaseDatabase.getInstance(
-            "https://whatappclon-be53d-default-rtdb.asia-southeast1.firebasedatabase.app"
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserUid != null) {
+            homeViewModel.loadChats(currentUserUid)
+        }
+    }
+
+    // Direct state reading from ViewModel
+    val usersList = homeViewModel.users.value
+    val chatsList = homeViewModel.chats.value
+
+    val chats = usersList.map { user ->
+        val chat = chatsList.find { it.userId == user.uid }
+
+        ChatData(
+            uid = user.uid,
+            name = user.name,
+            message = chat?.lastMessage ?: "",
+            time = if (chat?.lastMessageTime != null && chat.lastMessageTime > 0L) {
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(chat.lastMessageTime))
+            } else {
+                ""
+            },
+            unreadCount = chat?.unreadCount ?: 0
         )
-
-        database.reference
-            .child("users")
-            .addListenerForSingleValueEvent(
-                object : ValueEventListener {
-
-                    override fun onDataChange(snapshot: DataSnapshot) {
-
-                        val userList = mutableListOf<ChatData>()
-
-                        for (userSnapshot in snapshot.children) {
-
-                            val name =
-                                userSnapshot.child("name")
-                                    .getValue(String::class.java)
-                                    ?: continue
-
-                            userList.add(
-                                ChatData(
-                                    name = name,
-                                    message = "Hello bro 👋",
-                                    time = "",
-                                    unreadCount = 0
-                                )
-                            )
-                        }
-
-                        chats = userList
-                    }
-                    override fun onCancelled(error: DatabaseError) {
-                        println("FIREBASE ERROR: ${error.message}")
-                    }
-                }
-            )
     }
 
     if (selectedChat != null) {
-
         ChatScreen(
-            userName = selectedChat!!,
+            userName = selectedChat!!.name,
+            receiverId = selectedChat!!.uid,
             onBack = {
                 selectedChat = null
             }
         )
-
         return
     }
 
@@ -117,24 +107,15 @@ fun HomePage() {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .verticalScroll(rememberScrollState())
     ) {
-
         // ================= HEADER =================
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(whatsappGreen)
-                .padding(
-                    start = 16.dp,
-                    end = 8.dp,
-                    top = 18.dp,
-                    bottom = 10.dp
-                ),
+                .padding(start = 16.dp, end = 8.dp, top = 18.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Text(
                 text = "Chating App",
                 modifier = Modifier.weight(1f),
@@ -144,9 +125,7 @@ fun HomePage() {
                 color = Color.White
             )
 
-            IconButton(
-                onClick = {}
-            ) {
+            IconButton(onClick = {}) {
                 Icon(
                     imageVector = Icons.Default.PhotoCamera,
                     contentDescription = "Camera",
@@ -154,9 +133,7 @@ fun HomePage() {
                 )
             }
 
-            IconButton(
-                onClick = {}
-            ) {
+            IconButton(onClick = {}) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More",
@@ -166,14 +143,12 @@ fun HomePage() {
         }
 
         // ================= TABS =================
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(whatsappGreen),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Text(
                 text = "CHATS",
                 modifier = Modifier
@@ -207,19 +182,17 @@ fun HomePage() {
                 color = Color.White
             )
         }
-        Spacer(
-            modifier = Modifier.height(10.dp)
-        )
 
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // ================= SEARCH =================
         OutlinedTextField(
             value = searchText,
             onValueChange = { searchText = it },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            placeholder = {
-                Text("Search chats")
-            },
+            placeholder = { Text("Search chats") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -229,30 +202,34 @@ fun HomePage() {
             singleLine = true,
             shape = RoundedCornerShape(30.dp)
         )
-        chats
-            .filter {
-                it.name.contains(
-                    searchText,
-                    ignoreCase = true
-                )
-            }
-            .forEach { chat ->
 
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // ================= CHAT LIST (LazyColumn for better performance) =================
+        val filteredChats = chats.filter {
+            it.name.contains(searchText, ignoreCase = true)
+        }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(
+                filteredChats.filter { it.uid.isNotBlank() },
+                key = { it.uid }
+            ) { chat ->
                 ChatItem(
                     name = chat.name,
                     message = chat.message,
                     time = chat.time,
                     unreadCount = chat.unreadCount,
                     onClick = {
-                        selectedChat = chat.name
+                        selectedChat = chat
                     }
                 )
             }
-
         }
     }
-
-
+}
 
 @Composable
 fun ChatItem(
@@ -265,75 +242,78 @@ fun ChatItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                onClick()
-            }
-            .padding(
-                horizontal = 16.dp,
-                vertical = 10.dp
-            ),
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        Text(
-            text = name.first().toString(),
+        // Profile Circle with centered text
+        Box(
             modifier = Modifier
-                .size(55.dp)
+                .size(50.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray)
-                .padding(17.dp),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
+                .background(Color.LightGray),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = name.firstOrNull()?.toString()?.uppercase() ?: "?",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.DarkGray
+            )
+        }
 
-        Spacer(
-            modifier = Modifier.width(12.dp)
-        )
+        Spacer(modifier = Modifier.width(12.dp))
 
         Column(
             modifier = Modifier.weight(1f)
         ) {
-
             Text(
                 text = name,
                 fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Text(
-                text = message,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
+            if (message.isNotEmpty()) {
+                Text(
+                    text = message,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
         Column(
             horizontalAlignment = Alignment.End
         ) {
-
-            Text(
-                text = time,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
+            if (time.isNotEmpty()) {
+                Text(
+                    text = time,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
 
             if (unreadCount > 0) {
+                Spacer(modifier = Modifier.height(4.dp))
 
-                Spacer(
-                    modifier = Modifier.height(4.dp)
-                )
-
-                Text(
-                    text = unreadCount.toString(),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
+                Box(
                     modifier = Modifier
                         .size(22.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF25D366))
-                        .padding(5.dp)
-                )
+                        .background(Color(0xFF25D366)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = unreadCount.toString(),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

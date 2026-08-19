@@ -1,6 +1,6 @@
-package com.arif.jetpackcomposed.whatappclone
+package com.arif.jetpackcomposed.whatappclone.ui.auth
 
-
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,11 +13,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,19 +24,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.FirebaseException
-
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
-import java.util.concurrent.TimeUnit
-import android.app.Activity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
-
+import java.util.concurrent.TimeUnit
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 @Composable
-fun RegisterPage() {
+fun RegisterPage(
+    onRegisterSuccess: () -> Unit
+) {
     val auth = remember { FirebaseAuth.getInstance() }
     val database = remember {
         FirebaseDatabase.getInstance(
@@ -81,29 +82,29 @@ fun RegisterPage() {
         }
 
     Column(
-        modifier = Modifier
+        modifier = Modifier.Companion
             .fillMaxSize()
             .padding(horizontal = 30.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
 
         Text(
             text = "Chating App",
             fontSize = 36.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Cursive,
+            fontWeight = FontWeight.Companion.Bold,
+            fontFamily = FontFamily.Companion.Cursive,
             color = Color(0xFF25D366)
         )
 
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.Companion.height(15.dp))
 
         Text(
             text = if (otpSent) "Verify your number" else "Create your account",
             fontSize = 18.sp
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.Companion.height(30.dp))
 
         if (!otpSent) {
 
@@ -111,14 +112,14 @@ fun RegisterPage() {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.Companion.fillMaxWidth(),
                 label = {
                     Text("Full Name")
                 },
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.Companion.height(12.dp))
 
             // Phone Number
             OutlinedTextField(
@@ -128,7 +129,7 @@ fun RegisterPage() {
                         phone = it
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.Companion.fillMaxWidth(),
                 label = {
                     Text("Phone Number")
                 },
@@ -138,7 +139,7 @@ fun RegisterPage() {
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.Companion.height(20.dp))
             if (otpSent) {
 
                 OutlinedTextField(
@@ -148,14 +149,14 @@ fun RegisterPage() {
                             otp = it
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.Companion.fillMaxWidth(),
                     label = {
                         Text("Enter OTP")
                     },
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.Companion.height(12.dp))
             }
 
             Button(
@@ -185,7 +186,7 @@ fun RegisterPage() {
                         object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 
                             override fun onVerificationCompleted(
-                                credential: com.google.firebase.auth.PhoneAuthCredential
+                                credential: PhoneAuthCredential
                             ) {
                                 auth.signInWithCredential(credential)
                                     .addOnCompleteListener { task ->
@@ -195,10 +196,12 @@ fun RegisterPage() {
                                             val uid = auth.currentUser?.uid
 
                                             if (uid != null) {
-
                                                 val userData = hashMapOf<String, Any>(
+                                                    "uid" to uid,
                                                     "name" to name,
                                                     "phone" to fullPhoneNumber,
+                                                    "profileImage" to "",
+                                                    "about" to "Hey there! I am using WhatsApp.",
                                                     "createdAt" to ServerValue.TIMESTAMP
                                                 )
 
@@ -213,6 +216,7 @@ fun RegisterPage() {
                                                             "Phone verified & profile saved!",
                                                             Toast.LENGTH_SHORT
                                                         ).show()
+                                                        onRegisterSuccess()
                                                     }
                                                     .addOnFailureListener { error ->
 
@@ -266,7 +270,7 @@ fun RegisterPage() {
 
                     PhoneAuthProvider.verifyPhoneNumber(options)
                 },
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -280,7 +284,7 @@ fun RegisterPage() {
             }
             if (otpSent) {
 
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.Companion.height(15.dp))
 
                 OutlinedTextField(
                     value = otp,
@@ -289,7 +293,7 @@ fun RegisterPage() {
                             otp = it
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.Companion.fillMaxWidth(),
                     label = {
                         Text("Enter OTP")
                     },
@@ -299,7 +303,7 @@ fun RegisterPage() {
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.Companion.height(15.dp))
 
                 Button(
                     onClick = {
@@ -358,7 +362,7 @@ fun RegisterPage() {
                             }
                         // Verify OTP next step mein
                     },
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .fillMaxWidth()
                         .height(50.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -382,7 +386,7 @@ fun RegisterPage() {
                         otp = it
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.Companion.fillMaxWidth(),
                 label = {
                     Text("Enter OTP")
                 },
@@ -392,7 +396,7 @@ fun RegisterPage() {
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.Companion.height(20.dp))
 
             Button(
                 onClick = {
@@ -439,6 +443,7 @@ fun RegisterPage() {
                                                     "Account created successfully!",
                                                     Toast.LENGTH_LONG
                                                 ).show()
+                                                onRegisterSuccess()
                                             }
                                             .addOnFailureListener { error ->
 
@@ -463,7 +468,7 @@ fun RegisterPage() {
                     }
 
                 },
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(

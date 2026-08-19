@@ -1,12 +1,15 @@
 package com.arif.jetpackcomposed
 
+import HomePage
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.arif.jetpackcomposed.whatappclone.ChatScreen
-import com.arif.jetpackcomposed.whatappclone.HomePage
-import com.arif.jetpackcomposed.whatappclone.RegisterPage
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.arif.jetpackcomposed.whatappclone.ui.auth.RegisterPage
 
 class MainActivity : ComponentActivity() {
 
@@ -16,12 +19,23 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-//            RegisterPage()
-                       HomePage()
-//            ChatScreen() { }
-//                ChatScreen(
-//                    userName = "Rahul"
-//                )
+
+            var showHomePage by remember {
+                mutableStateOf(false)
+            }
+
+            if (showHomePage) {
+
+                HomePage()
+
+            } else {
+
+                RegisterPage(
+                    onRegisterSuccess = {
+                        showHomePage = true
+                    }
+                )
             }
         }
     }
+}
